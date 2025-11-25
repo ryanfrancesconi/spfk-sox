@@ -8,7 +8,7 @@ private let name: String = "SPFKSoX" // Swift target
 private let dependencyNames: [String] = ["SPFKAudioBase", "SPFKTesting"]
 private let dependencyNamesC: [String] = []
 private let dependencyBranch = "main"
-private let useLocalDependencies: Bool = false
+private let useLocalDependencies: Bool = true
 private let platforms: [PackageDescription.SupportedPlatform]? = [
     .macOS(.v12),
 ]

@@ -77,14 +77,14 @@ class SoXTests: BinTestCase {
 
     @Test func exportInvalidStereoChannels() async throws {
         let input = TestBundleResources.shared.no_data_chunk
-        let bin = self.bin
+        let bin = bin
 
         await #expect(throws: (any Error).self) {
             _ = try await SoX.shared.exportSplitStereo(input: input, destination: bin, overwrite: true)
         }
     }
 
-    @Test func testExportMultipleChannels() async throws {
+    @Test func exportMultipleChannels() async throws {
         let input = TestBundleResources.shared.tabla_6_channel
 
         let urls = try await SoX.shared.exportChannels(input: input, destination: bin, newName: "TEST")
@@ -96,7 +96,7 @@ class SoXTests: BinTestCase {
         let expected = ["TEST.1.wav", "TEST.2.wav", "TEST.3.wav", "TEST.4.wav", "TEST.5.wav", "TEST.6.wav"]
 
         #expect(
-            directoryContents.map { $0.lastPathComponent } == expected
+            directoryContents.map(\.lastPathComponent) == expected
         )
     }
 
@@ -122,7 +122,7 @@ class SoXTests: BinTestCase {
         #expect(avFile.fileFormat.channelCount == 1)
     }
 
-    @MainActor @Test func concurrentInstances() async throws {
+    @Test func concurrentInstances() async throws {
         deleteBinOnExit = false
 
         let task1 = Task {

@@ -90,7 +90,11 @@ private var testTargetDependencies: [PackageDescription.Target.Dependency] {
 private let testTarget: PackageDescription.Target = .testTarget(
     name: nameTests,
     dependencies: testTargetDependencies,
-    resources: nil
+    resources: nil,
+    swiftSettings: [
+        .swiftLanguageMode(.v5),
+        .unsafeFlags(["-strict-concurrency=complete"]),
+    ],
 )
 
 private let cTarget: PackageDescription.Target = .target(

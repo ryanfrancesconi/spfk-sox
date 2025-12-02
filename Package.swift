@@ -3,12 +3,12 @@
 
 import PackageDescription
 
-private let name: String = "SPFKSoX" // Swift target
-private let dependencyNames: [String] = ["SPFKAudioBase", "SPFKTesting"]
-private let dependencyNamesC: [String] = []
-private let dependencyBranch: String = "development"
+let name: String = "SPFKSoX" // Swift target
+let dependencyNames: [String] = ["SPFKAudioBase", "SPFKTesting"]
+let dependencyNamesC: [String] = []
+let dependencyBranch: String = "development"
 
-private let platforms: [PackageDescription.SupportedPlatform]? = [
+let platforms: [PackageDescription.SupportedPlatform]? = [
     .macOS(.v12)
 ]
 
@@ -17,13 +17,13 @@ let remoteDependencies: [RemoteDependency] = []
 // Special case for local binary targets
 let binaryTargetNames = ["libsndfile", "libsamplerate", "libsox", "libmad", "libmp3lame", "libmpg123"]
 
-private var cTargetDependencies: [PackageDescription.Target.Dependency] {
+var cTargetDependencies: [PackageDescription.Target.Dependency] {
     binaryTargetNames.map {
         .target(name: $0)
     }
 }
 
-private let binaryTargets: [PackageDescription.Target] =
+let binaryTargets: [PackageDescription.Target] =
     binaryTargetNames.map {
         PackageDescription.Target.binaryTarget(
             name: $0,
@@ -33,29 +33,31 @@ private let binaryTargets: [PackageDescription.Target] =
 
 // MARK: - Reusable Code for a dual Swift + C package
 
+let spfkVersion: Version = .init(0, 0, 1)
+
 struct RemoteDependency {
     let package: PackageDescription.Package.Dependency
     let product: PackageDescription.Target.Dependency
 }
 
-private let nameC: String = "\(name)C" // C/C++ target
-private let nameTests: String = "\(name)Tests" // Test target
-private let githubBase = "https://github.com/ryanfrancesconi"
+let nameC: String = "\(name)C" // C/C++ target
+let nameTests: String = "\(name)Tests" // Test target
+let githubBase = "https://github.com/ryanfrancesconi"
 
-private let products: [PackageDescription.Product] = [
+let products: [PackageDescription.Product] = [
     .library(name: name, targets: [name, nameC])
 ]
 
-private let packageDependencies: [PackageDescription.Package.Dependency] = {
+let packageDependencies: [PackageDescription.Package.Dependency] = {
     let value: [PackageDescription.Package.Dependency] =
         dependencyNames.map {
-            .package(url: "\(githubBase)/\($0)", branch: dependencyBranch)
+            .package(url: "\(githubBase)/\($0)", from: spfkVersion)
         }
 
     return value + remoteDependencies.map(\.package)
 }()
 
-private var swiftTargetDependencies: [PackageDescription.Target.Dependency] {
+var swiftTargetDependencies: [PackageDescription.Target.Dependency] {
     let names = dependencyNames.filter { $0 != "SPFKTesting" }
 
     var value: [PackageDescription.Target.Dependency] = names.map {
@@ -68,13 +70,13 @@ private var swiftTargetDependencies: [PackageDescription.Target.Dependency] {
     return value
 }
 
-private let swiftTarget: PackageDescription.Target = .target(
+let swiftTarget: PackageDescription.Target = .target(
     name: name,
     dependencies: swiftTargetDependencies,
     resources: nil
 )
 
-private var testTargetDependencies: [PackageDescription.Target.Dependency] {
+var testTargetDependencies: [PackageDescription.Target.Dependency] {
     var array: [PackageDescription.Target.Dependency] = [
         .byNameItem(name: name, condition: nil),
         .byNameItem(name: nameC, condition: nil)
@@ -87,7 +89,7 @@ private var testTargetDependencies: [PackageDescription.Target.Dependency] {
     return array
 }
 
-private let testTarget: PackageDescription.Target = .testTarget(
+let testTarget: PackageDescription.Target = .testTarget(
     name: nameTests,
     dependencies: testTargetDependencies,
     resources: nil,
@@ -97,7 +99,7 @@ private let testTarget: PackageDescription.Target = .testTarget(
     ],
 )
 
-private let cTarget: PackageDescription.Target = .target(
+let cTarget: PackageDescription.Target = .target(
     name: nameC,
     dependencies: cTargetDependencies,
     publicHeadersPath: "include",
@@ -109,7 +111,7 @@ private let cTarget: PackageDescription.Target = .target(
     ]
 )
 
-private let targets: [PackageDescription.Target] = [
+let targets: [PackageDescription.Target] = [
     swiftTarget, cTarget, testTarget
 ]
 

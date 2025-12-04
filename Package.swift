@@ -4,13 +4,11 @@
 import PackageDescription
 
 let name: String = "SPFKSoX" // Swift target
-let dependencyNames: [String] = ["SPFKAudioBase", "SPFKTesting"]
-
 var localDependencies: [RemoteDependency] { [
     .init(package: .package(url: "\(githubBase)/SPFKAudioBase", from: "0.0.1"),
-          product: .product(name: "SPFKAudioBase", package: "SPFKAudioBase")),
+          product: .product(name: "SPFKAudioBase", package: "spfk-audio-base")),
     .init(package: .package(url: "\(githubBase)/SPFKTesting", from: "0.0.1"),
-          product: .product(name: "SPFKTesting", package: "SPFKTesting")),
+          product: .product(name: "SPFKTesting", package: "spfk-testing")),
 ] }
 let remoteDependencies: [RemoteDependency] = []
 let resources: [PackageDescription.Resource]? = nil

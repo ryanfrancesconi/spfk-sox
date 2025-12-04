@@ -82,8 +82,7 @@ let package = Package(
                 "SPFKSoX",
                 "SPFKSoXC",
                 .product(name: "SPFKTesting", package: "spfk-testing"),
-                
-                
+
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v5),

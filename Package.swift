@@ -6,16 +6,11 @@ import PackageDescription
 let package = Package(
     name: "spfk-sox",
     defaultLocalization: "en",
-    platforms: [
-        .macOS(.v12),
-    ],
+    platforms: [.macOS(.v12),],
     products: [
         .library(
             name: "SPFKSoX",
-            targets: [
-                "SPFKSoX",
-                "SPFKSoXC",
-            ]
+            targets: ["SPFKSoX", "SPFKSoXC",]
         ),
     ],
     dependencies: [
@@ -26,7 +21,7 @@ let package = Package(
         .target(
             name: "SPFKSoX",
             dependencies: [
-                "SPFKSoXC",
+                .targetItem(name: "SPFKSoXC", condition: nil),
                 .product(name: "SPFKAudioBase", package: "spfk-audio-base"),
             ]
         ),
@@ -50,7 +45,6 @@ let package = Package(
                 .headerSearchPath("include_private")
             ]
         ),
-
         .binaryTarget(
             name: "libsndfile",
             path: "Frameworks/libsndfile.xcframework"
@@ -75,12 +69,11 @@ let package = Package(
             name: "libmpg123",
             path: "Frameworks/libmpg123.xcframework"
         ),
-
         .testTarget(
             name: "SPFKSoXTests",
             dependencies: [
-                "SPFKSoX",
-                "SPFKSoXC",
+                .targetItem(name: "SPFKSoX", condition: nil),
+                .targetItem(name: "SPFKSoXC", condition: nil),
                 .product(name: "SPFKTesting", package: "spfk-testing"),
 
             ],

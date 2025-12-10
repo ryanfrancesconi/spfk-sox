@@ -125,25 +125,30 @@ class SoXTests: BinTestCase {
     @Test func concurrentInstances() async throws {
         deleteBinOnExit = false
 
+        let input = TestBundleResources.shared.tabla_wav
+        let output = bin.appendingPathComponent("trimmed.wav")
+
         let task1 = Task {
-            try await trim()
+            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         let task2 = Task {
-            try await trim()
+            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         let task3 = Task {
-            try await trim()
+            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         let task4 = Task {
-            try await trim()
+            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
-        try await task1.value
-        try await task2.value
-        try await task3.value
-        try await task4.value
+        try await wait(sec: 1)
+
+        #expect(try await task1.value)
+        #expect(try await task2.value)
+        #expect(try await task3.value)
+        #expect(try await task4.value)
     }
 }

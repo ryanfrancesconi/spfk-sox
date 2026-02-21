@@ -146,9 +146,9 @@ class SoXTests: BinTestCase {
 
         try await wait(sec: 1)
 
-        #expect(try await task1.value)
-        #expect(try await task2.value)
-        #expect(try await task3.value)
-        #expect(try await task4.value)
+        #expect(await task1.value)
+        #expect(await task2.value)
+        #expect(await task3.value)
+        #expect(await task4.value)
     }
 }

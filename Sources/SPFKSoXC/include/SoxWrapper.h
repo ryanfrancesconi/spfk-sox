@@ -18,7 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (int)  trim:(NSString *)input
        output:(NSString *)output
     startTime:(NSString *)startTime
-      endTime:(NSString *)endTime;
+      endTime:(NSString *)endTime
+     fadeTime:(NSString *)fadeTime;
 
 - (int)convert:(NSString *)input
         output:(NSString *)output

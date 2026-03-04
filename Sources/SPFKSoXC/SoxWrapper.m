@@ -140,87 +140,11 @@ char *_sox = "sox";
     return sox_main(5, argv);
 }
 
-- (int)remix2:(NSString *)input
-       output:(NSString *)output
-      channel:(NSString *)channel {
-    /* All libSoX applications must start by initialising the SoX library */
-    if (sox_init() != SOX_SUCCESS) {
-        // error
-        return 1;
-    }
-
-    sox_format_t *soxInput, *soxOutput = NULL;
-    sox_effects_chain_t *chain;
-    sox_effect_t *e;
-    sox_signalinfo_t interm_signal;
-    char *args[10];
-
-    soxInput = sox_open_read(input.UTF8String, NULL, NULL, NULL);
-    interm_signal = soxInput->signal; /* NB: deep copy */
-
-    sox_encodinginfo_t out_encoding = soxInput->encoding;
-
-    sox_signalinfo_t out_signal = {
-        interm_signal.rate,
-        1, // mono
-        0,
-        0,
-        NULL
-    };
-
-    soxOutput = sox_open_write(
-        output.UTF8String,
-        &out_signal,
-        &out_encoding,
-        NULL,
-        NULL,
-        NULL
-        );
-
-    chain = sox_create_effects_chain(&soxInput->encoding, &soxInput->encoding);
-
-    /* The first effect in the effect chain must be something that can source
-     * samples; in this case, we use the built-in handler that inputs
-     * data from an audio file */
-    e = sox_create_effect(sox_find_effect("input"));
-    args[0] = (char *)soxInput;
-    sox_effect_options(e, 1, args);
-    sox_add_effect(chain, e, &interm_signal, &soxInput->signal);
-    free(e);
-
-    e = sox_create_effect(sox_find_effect("remix"));
-    args[0] = (char *)channel.UTF8String;
-    sox_effect_options(e, 1, args);
-    sox_add_effect(chain, e, &interm_signal, &out_signal);
-    free(e);
-
-    e = sox_create_effect(sox_find_effect("channels"));
-    sox_effect_options(e, 0, NULL);
-    sox_add_effect(chain, e, &interm_signal, &out_signal);
-    free(e);
-
-    /* The last effect in the effect chain must be something that only consumes
-     * samples; in this case, we use the built-in handler that outputs
-     * data to an audio file */
-    e = sox_create_effect(sox_find_effect("output"));
-    args[0] = (char *)soxOutput;
-    sox_effect_options(e, 1, args);
-    sox_add_effect(chain, e, &interm_signal, &out_signal);
-    free(e);
-
-    sox_flow_effects(chain, NULL, NULL);
-    sox_delete_effects_chain(chain);
-    sox_close(soxOutput);
-    sox_close(soxInput);
-    sox_quit();
-
-    return SOX_SUCCESS;
-}
-
 - (int)  trim:(NSString *)input
        output:(NSString *)output
     startTime:(NSString *)startTime
-      endTime:(NSString *)endTime {
+      endTime:(NSString *)endTime
+     fadeTime:(NSString *)fadeTime {
     /* All libSoX applications must start by initialising the SoX library */
     if (sox_init() != SOX_SUCCESS) {
         sox_error(1);
@@ -248,6 +172,12 @@ char *_sox = "sox";
                                &out_signal,
                                &out_encoding, NULL, NULL, NULL);
 
+    if (soxOutput == NULL) {
+        sox_close(soxInput);
+        sox_quit();
+        return 1;
+    }
+
     chain = sox_create_effects_chain(&soxInput->encoding, &soxInput->encoding);
 
     /* The first effect in the effect chain must be something that can source
@@ -273,16 +203,17 @@ char *_sox = "sox";
     sox_add_effect(chain, e, &interm_signal, &out_signal);
     free(e);
 
-    // add very fast fade to eliminate clicks
-    // TODO: allow for trim fade time to be passed in
-    args[0] = "h";
-    args[1] = "0.01";
-    args[2] = "0";
-    args[3] = "0.01";
-    e = sox_create_effect(sox_find_effect("fade"));
-    sox_effect_options(e, 4, args);
-    sox_add_effect(chain, e, &interm_signal, &out_signal);
-    free(e);
+    // add very fast fade to eliminate clicks (skip if fadeTime is "0")
+    if (![fadeTime isEqualToString:@"0"] && ![fadeTime isEqualToString:@"0.0"]) {
+        args[0] = "h";
+        args[1] = (char *)fadeTime.UTF8String;
+        args[2] = "0";
+        args[3] = (char *)fadeTime.UTF8String;
+        e = sox_create_effect(sox_find_effect("fade"));
+        sox_effect_options(e, 4, args);
+        sox_add_effect(chain, e, &interm_signal, &out_signal);
+        free(e);
+    }
 
     /* The last effect in the effect chain must be something that only consumes
      * samples; in this case, we use the built-in handler that outputs

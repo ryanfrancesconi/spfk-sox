@@ -12,7 +12,7 @@ class SoXTests: BinTestCase {
         let input = TestBundleResources.shared.tabla_wav
         let output = bin.appendingPathComponent("test.mp3")
 
-        #expect(await SoX.shared.convertMP3(input: input, output: output, bitRate: 256, sampleRate: 48000))
+        try await SoX.shared.convertMP3(input: input, output: output, bitRate: 256, sampleRate: 48000)
 
         let avFile = try AVAudioFile(forReading: output)
         #expect(avFile.duration == 4.44)
@@ -26,7 +26,7 @@ class SoXTests: BinTestCase {
         for format in formats {
             let output = bin.appendingPathComponent("test.\(format.pathExtension)")
 
-            #expect(await SoX.shared.convertPCM(input: input, output: output, bitDepth: 24, sampleRate: 48000))
+            try await SoX.shared.convertPCM(input: input, output: output, bitDepth: 24, sampleRate: 48000)
 
             let avFile = try AVAudioFile(forReading: output)
 
@@ -55,11 +55,9 @@ class SoXTests: BinTestCase {
 
         let output = bin.appendingPathComponent("\(input.deletingPathExtension().lastPathComponent) 3 channels.wav")
 
-        #expect(
-            await SoX.shared.createMultiChannelWave(
-                input: [url1, url2, url3],
-                output: output
-            )
+        try await SoX.shared.createMultiChannelWave(
+            input: [url1, url2, url3],
+            output: output
         )
 
         let avFile = try AVAudioFile(forReading: output)
@@ -104,9 +102,7 @@ class SoXTests: BinTestCase {
         let input = TestBundleResources.shared.tabla_wav
         let output = bin.appendingPathComponent("trimmed.wav")
 
-        #expect(
-            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
-        )
+        try await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
 
         let avFile = try AVAudioFile(forReading: output)
         #expect(avFile.duration == 1)
@@ -129,26 +125,26 @@ class SoXTests: BinTestCase {
         let output = bin.appendingPathComponent("trimmed.wav")
 
         let task1 = Task {
-            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
+            try await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         let task2 = Task {
-            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
+            try await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         let task3 = Task {
-            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
+            try await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         let task4 = Task {
-            await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
+            try await SoX.shared.trim(input: input, output: output, startTime: 1, endTime: 2)
         }
 
         try await wait(sec: 1)
 
-        #expect(await task1.value)
-        #expect(await task2.value)
-        #expect(await task3.value)
-        #expect(await task4.value)
+        try await task1.value
+        try await task2.value
+        try await task3.value
+        try await task4.value
     }
 }

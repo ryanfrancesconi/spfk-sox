@@ -223,19 +223,20 @@ cleanup:
     sox_effects_chain_t *chain = NULL;
     sox_effect_t *e = NULL;
     int result = SOX_EOF;
+    sox_signalinfo_t out_signal;
+    sox_signalinfo_t interm_signal;
 
     soxInput = sox_open_read(input.UTF8String, NULL, NULL, NULL);
     if (soxInput == NULL) {
         goto cleanup;
     }
 
-    sox_signalinfo_t out_signal = soxInput->signal;
+    out_signal = soxInput->signal;
     out_signal.channels = 1; // remix to mono
 
     soxOutput = sox_open_write(output.UTF8String,
                                &out_signal,
                                NULL, NULL, NULL, NULL);
-
     if (soxOutput == NULL) {
         goto cleanup;
     }
@@ -245,7 +246,7 @@ cleanup:
         goto cleanup;
     }
 
-    sox_signalinfo_t interm_signal = soxInput->signal;
+    interm_signal = soxInput->signal;
 
     // Input effect
     {
@@ -338,70 +339,88 @@ cleanup:
     sox_effects_chain_t *chain = NULL;
     sox_effect_t *e = NULL;
     int result = SOX_EOF;
-
+    sox_signalinfo_t interm_signal;
+    sox_signalinfo_t out_signal;
+    int argc = 0;
     char *args[10];
 
     soxInput = sox_open_read(input.UTF8String, NULL, NULL, NULL);
-
     if (soxInput == NULL) {
         goto cleanup;
     }
 
-    sox_signalinfo_t interm_signal = soxInput->signal; /* NB: deep copy */
-    sox_signalinfo_t out_signal = soxInput->signal;
+    interm_signal = soxInput->signal;
+    out_signal = soxInput->signal;
 
     soxOutput = sox_open_write(output.UTF8String,
                                &out_signal,
                                NULL, NULL, NULL, NULL);
-
     if (soxOutput == NULL) {
         goto cleanup;
     }
 
     chain = sox_create_effects_chain(&soxInput->encoding, &soxOutput->encoding);
-
-    // Input effect
-    e = sox_create_effect(sox_find_effect("input"));
-    args[0] = (char *)soxInput;
-    sox_effect_options(e, 1, args);
-    sox_add_effect(chain, e, &interm_signal, &soxInput->signal);
-    free(e);
-
-    // Trim effect
-    e = sox_create_effect(sox_find_effect("trim"));
-
-    int argc = 1;
-    args[0] = (char *)startTime.UTF8String;
-
-    if (![endTime isEqualToString:@"0"]) {
-        args[1] = (char *)endTime.UTF8String;
-        argc = 2;
+    if (chain == NULL) {
+        goto cleanup;
     }
 
-    sox_effect_options(e, argc, args);
-    sox_add_effect(chain, e, &interm_signal, &out_signal);
-    free(e);
+    // Input effect
+    {
+        e = sox_create_effect(sox_find_effect("input"));
+        args[0] = (char *)soxInput;
+        sox_effect_options(e, 1, args);
+        sox_add_effect(chain, e, &interm_signal, &soxInput->signal);
+        free(e);
+        e = NULL;
+    }
+
+    // Trim effect
+    {
+        e = sox_create_effect(sox_find_effect("trim"));
+        argc = 1;
+        args[0] = (char *)startTime.UTF8String;
+
+        if (![endTime isEqualToString:@"0"]) {
+            args[1] = (char *)endTime.UTF8String;
+            argc = 2;
+        }
+
+        sox_effect_options(e, argc, args);
+        sox_add_effect(chain, e, &interm_signal, &out_signal);
+        free(e);
+        e = NULL;
+    }
 
     // Fade effect (skip if fadeTime is "0")
     if (![fadeTime isEqualToString:@"0"] && ![fadeTime isEqualToString:@"0.0"]) {
+        e = sox_create_effect(sox_find_effect("fade"));
         args[0] = "h";
         args[1] = (char *)fadeTime.UTF8String;
         args[2] = "0";
         args[3] = (char *)fadeTime.UTF8String;
-        e = sox_create_effect(sox_find_effect("fade"));
         sox_effect_options(e, 4, args);
         sox_add_effect(chain, e, &interm_signal, &out_signal);
         free(e);
+        e = NULL;
     }
 
     // Output effect
-    e = sox_create_effect(sox_find_effect("output"));
-    args[0] = (char *)soxOutput;
-    sox_effect_options(e, 1, args);
-    sox_add_effect(chain, e, &interm_signal, &out_signal);
-    free(e);
+    {
+        e = sox_create_effect(sox_find_effect("output"));
+        args[0] = (char *)soxOutput;
+        sox_effect_options(e, 1, args);
+        sox_add_effect(chain, e, &interm_signal, &out_signal);
+        free(e);
+        e = NULL;
+    }
 
     result = sox_flow_effects(chain, NULL, NULL);
+
+    // The trim effect stops the chain early by returning SOX_EOF when it
+    // reaches the end position. This is expected behavior, not an error.
+    if (result == SOX_EOF) {
+        result = SOX_SUCCESS;
+    }
 
 cleanup:
     if (chain != NULL) {

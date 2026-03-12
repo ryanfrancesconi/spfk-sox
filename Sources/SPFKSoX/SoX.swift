@@ -166,6 +166,60 @@ public actor SoX {
         return true
     }
 
+    // MARK: - OGG Vorbis Conversion
+
+    /// Convert audio to OGG Vorbis format.
+    ///
+    /// The SoX `-C` compression parameter for Vorbis specifies quality on a scale from -1 to 10
+    /// (higher = better quality, larger file). When a positive integer is given, SoX treats it
+    /// as a nominal bitrate in kbps (average VBR).
+    ///
+    /// - Parameters:
+    ///   - quality: Vorbis encoding quality (-1 to 10). Default is `6` (good quality).
+    ///     Only used when `bitRate` is nil.
+    @discardableResult
+    public func convertOGG(
+        input: URL,
+        output: URL,
+        bitRate: UInt32?,
+        sampleRate: Double?,
+        quality: Int = 6
+    ) throws -> Bool {
+        guard input.exists else {
+            throw NSError(description: "Input file does not exist: \(input.soxPath)")
+        }
+
+        let inputPath = input.soxPath
+        let outputPath = output.soxPath
+
+        // For OGG Vorbis, -C takes a quality value (float) or bitrate in kbps.
+        // Using quality as the fractional part: e.g. "128.6" = 128 kbps target with quality 6.
+        let compressionValue: String? = if let bitRate {
+            String(bitRate) + ".\(quality)"
+        } else {
+            nil
+        }
+
+        let status: Int32 = if let compressionValue, let sampleRate {
+            sox.convert(inputPath, output: outputPath, bitRate: compressionValue, sampleRate: String(sampleRate))
+
+        } else if let compressionValue {
+            sox.convert(inputPath, output: outputPath, bitRate: compressionValue)
+
+        } else if let sampleRate {
+            sox.convert(inputPath, output: outputPath, sampleRate: String(sampleRate))
+
+        } else {
+            sox.convert(inputPath, output: outputPath)
+        }
+
+        guard SOX_SUCCESS.rawValue == status else {
+            throw NSError(description: "OGG Vorbis conversion failed for \(input.lastPathComponent)")
+        }
+
+        return true
+    }
+
     // MARK: - Channel Operations
 
     /// Split stereo files to dual mono

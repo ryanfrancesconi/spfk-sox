@@ -16,6 +16,11 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ryanfrancesconi/spfk-audio-base", from: "0.0.6"),
         .package(url: "https://github.com/ryanfrancesconi/spfk-testing", from: "0.0.5"),
+        .package(url: "https://github.com/sbooth/sndfile-binary-xcframework", from: "0.1.2"),
+        .package(url: "https://github.com/sbooth/ogg-binary-xcframework", from: "0.1.3"),
+        .package(url: "https://github.com/sbooth/flac-binary-xcframework", from: "0.2.0"),
+        .package(url: "https://github.com/sbooth/vorbis-binary-xcframework", from: "0.1.2"),
+        .package(url: "https://github.com/sbooth/opus-binary-xcframework", from: "0.2.2"),
     ],
     targets: [
         .target(
@@ -29,13 +34,16 @@ let package = Package(
         .target(
             name: "SPFKSoXC",
             dependencies: [
-                .target(name: "libsndfile"),
+                .product(name: "sndfile", package: "sndfile-binary-xcframework"),
+                .product(name: "ogg", package: "ogg-binary-xcframework"),
+                .product(name: "FLAC", package: "flac-binary-xcframework"),
+                .product(name: "vorbis", package: "vorbis-binary-xcframework"),
+                .product(name: "opus", package: "opus-binary-xcframework"),
                 .target(name: "libsamplerate"),
                 .target(name: "libsox"),
                 .target(name: "libmad"),
                 .target(name: "libmp3lame"),
                 .target(name: "libmpg123"),
-
             ],
             publicHeadersPath: "include",
             cSettings: [
@@ -44,10 +52,6 @@ let package = Package(
             cxxSettings: [
                 .headerSearchPath("include_private")
             ]
-        ),
-        .binaryTarget(
-            name: "libsndfile",
-            path: "Frameworks/libsndfile.xcframework"
         ),
         .binaryTarget(
             name: "libsamplerate",
